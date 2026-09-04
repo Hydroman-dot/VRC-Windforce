@@ -1,0 +1,104 @@
+name: Bootstrap VRC WinForce PC files
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/bootstrap.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-pc-files:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install image tooling
+        run: python -m pip install pillow
+      - name: Restore PC source and icon
+        shell: bash
+        run: |
+          mkdir -p pc/assets
+          cat bootstrap/appgz.* | base64 -d | gzip -d > pc/VRC_WinForce.py
+          base64 -d bootstrap/icon128.b64 > pc/assets/VRC_WinForce_Icon.webp
+          python - <<'PY'
+          from pathlib import Path
+          from PIL import Image
+          p=Path('pc/assets')
+          im=Image.open(p/'VRC_WinForce_Icon.webp').convert('RGBA')
+          im=im.resize((256,256), Image.Resampling.LANCZOS)
+          im.save(p/'VRC_WinForce_Icon.png', optimize=True)
+          im.save(p/'VRC_WinForce_Icon.ico', format='ICO', sizes=[(16,16),(24,24),(32,32),(48,48),(64,64),(128,128),(256,256)])
+          PY
+      - name: Build one-file Windows installer
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import base64
+          root=Path('.')
+          app=(root/'pc/VRC_WinForce.py').read_bytes()
+          req=(root/'requirements.txt').read_bytes()
+          png=(root/'pc/assets/VRC_WinForce_Icon.png').read_bytes()
+          ico=(root/'pc/assets/VRC_WinForce_Icon.ico').read_bytes()
+          def b64(b): return base64.b64encode(b).decode('ascii')
+          def wrap(s,n=100): return '\n'.join(s[i:i+n] for i in range(0,len(s),n))
+          header=r'''@echo off
+          setlocal EnableExtensions
+          title VRC WinForce v1.8.2 Installer
+          set "INSTALLDIR=%LOCALAPPDATA%\VRC_WinForce"
+          set "PYFILE=%INSTALLDIR%\VRC_WinForce.py"
+          set "REQFILE=%INSTALLDIR%\requirements.txt"
+          set "ICONPNG=%INSTALLDIR%\VRC_WinForce_Icon.png"
+          set "ICONICO=%INSTALLDIR%\VRC_WinForce_Icon.ico"
+          echo VRC WinForce v1.8.2 - Icon + Pause + HR + Ausklang
+          set "PYEXE="
+          where py >nul 2>nul && for /f "delims=" %%I in ('py -3 -c "import sys; print(sys.executable)" 2^>nul') do set "PYEXE=%%I"
+          if not defined PYEXE where python >nul 2>nul && for /f "delims=" %%I in ('python -c "import sys; print(sys.executable)" 2^>nul') do set "PYEXE=%%I"
+          if not defined PYEXE if exist "%LOCALAPPDATA%\Programs\Python\Python313\python.exe" set "PYEXE=%LOCALAPPDATA%\Programs\Python\Python313\python.exe"
+          if not defined PYEXE (where winget >nul 2>nul || goto :error)
+          if not defined PYEXE winget install -e --id Python.Python.3.13 --scope user --silent --accept-package-agreements --accept-source-agreements
+          if not defined PYEXE if exist "%LOCALAPPDATA%\Programs\Python\Python313\python.exe" set "PYEXE=%LOCALAPPDATA%\Programs\Python\Python313\python.exe"
+          if not defined PYEXE goto :error
+          if not exist "%INSTALLDIR%" mkdir "%INSTALLDIR%"
+          powershell -NoProfile -ExecutionPolicy Bypass -Command "$p=[IO.File]::ReadAllText('%~f0');function X([string]$a,[string]$b,[string]$o){$s=$p.LastIndexOf($a)+$a.Length;$e=$p.LastIndexOf($b);$d=$p.Substring($s,$e-$s)-replace '\s','';[IO.File]::WriteAllBytes($o,[Convert]::FromBase64String($d))};X '###WINFORCE_PY_BEGIN###' '###WINFORCE_PY_END###' '%PYFILE%';X '###WINFORCE_REQ_BEGIN###' '###WINFORCE_REQ_END###' '%REQFILE%';X '###WINFORCE_PNG_BEGIN###' '###WINFORCE_PNG_END###' '%ICONPNG%';X '###WINFORCE_ICO_BEGIN###' '###WINFORCE_ICO_END###' '%ICONICO%';" || goto :error
+          if not exist "%INSTALLDIR%\.venv\Scripts\python.exe" "%PYEXE%" -m venv "%INSTALLDIR%\.venv" || goto :error
+          "%INSTALLDIR%\.venv\Scripts\python.exe" -m pip install --disable-pip-version-check -r "%REQFILE%" || goto :error
+          (echo @echo off&echo cd /d "%%~dp0"&echo start "" ".venv\Scripts\pythonw.exe" "VRC_WinForce.py") > "%INSTALLDIR%\VRC_WinForce_Start.bat"
+          powershell -NoProfile -ExecutionPolicy Bypass -Command "$w=New-Object -ComObject WScript.Shell;$d=[Environment]::GetFolderPath('Desktop');$s=$w.CreateShortcut((Join-Path $d 'VRC WinForce.lnk'));$s.TargetPath='%INSTALLDIR%\VRC_WinForce_Start.bat';$s.WorkingDirectory='%INSTALLDIR%';$s.IconLocation='%ICONICO%,0';$s.Description='VRC WinForce';$s.Save()" || goto :error
+          echo Fertig.
+          start "" "%INSTALLDIR%\VRC_WinForce_Start.bat"
+          pause
+          exit /b 0
+          :error
+          echo Installation fehlgeschlagen.
+          pause
+          exit /b 1
+          '''
+          import textwrap
+          header=textwrap.dedent(header)
+          out=(header+'\n###WINFORCE_PY_BEGIN###\n'+wrap(b64(app))+'\n###WINFORCE_PY_END###\n'
+               +'###WINFORCE_REQ_BEGIN###\n'+wrap(b64(req))+'\n###WINFORCE_REQ_END###\n'
+               +'###WINFORCE_PNG_BEGIN###\n'+wrap(b64(png))+'\n###WINFORCE_PNG_END###\n'
+               +'###WINFORCE_ICO_BEGIN###\n'+wrap(b64(ico))+'\n###WINFORCE_ICO_END###\n')
+          (root/'pc/VRC_WinForce_Installer.bat').write_text(out,encoding='utf-8',newline='\r\n')
+          PY
+      - name: Verify files
+        run: |
+          python -m py_compile pc/VRC_WinForce.py
+          test -s pc/VRC_WinForce_Installer.bat
+          test -s pc/assets/VRC_WinForce_Icon.png
+          test -s pc/assets/VRC_WinForce_Icon.ico
+      - name: Commit generated files and clean bootstrap payload
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add pc/VRC_WinForce.py pc/VRC_WinForce_Installer.bat pc/assets/VRC_WinForce_Icon.webp pc/assets/VRC_WinForce_Icon.png pc/assets/VRC_WinForce_Icon.ico
+          git rm -r bootstrap .github/workflows/bootstrap.yml
+          git commit -m "Add PC v1.8.2 and VRC WinForce icon"
+          git push
