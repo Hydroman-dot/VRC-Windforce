@@ -1,5 +1,11 @@
 # VRC WinForce
 
+## Weiterentwicklung / Continued development
+
+Die PC-Funktionen werden in [VRC HydroLink](https://github.com/Hydroman-dot/VRC-HydroLink) als integriertes Modul weiterentwickelt. Dieses Einzelprojekt bleibt als historischer Stand erhalten und ist zur Archivierung vorgesehen. Bestehende Downloads und Anleitungen beziehen sich auf diesen alten Stand. Offene Unterschiede und Hardware-Abnahmen: [HydroLink-Funktionsvergleich](https://github.com/Hydroman-dot/VRC-HydroLink/blob/main/docs/FEATURE-PARITY.md).
+
+PC development continues in VRC HydroLink. This standalone project is retained as a historical reference and is scheduled for archival. Existing downloads and instructions describe the legacy version; full feature parity and hardware validation are not claimed.
+
 <p align="center"><img src="pc/assets/VRC_WinForce_Icon.png" width="220" alt="VRC WinForce icon"></p>
 
 VRC WinForce is a modular VR wind controller for Windows and ESP32. It turns live VR and fitness signals into real airflow using up to three independently wired 4-pin PWM PC fans.
@@ -150,7 +156,7 @@ If valid PC commands stop for several seconds, the ESP32 forces fan output to 0%
 
 Firmware updates also force PWM to 0%.
 
-## Planned
+## Historical roadmap (continued in HydroLink)
 
 - Directional wind using the three independent fan channels
 - Unity / Modular Avatar PhysBone sensor package
@@ -160,3 +166,9 @@ Firmware updates also force PWM to 0%.
 ## License
 
 MIT. See [LICENSE](LICENSE).
+
+## KI-Hinweis / AI disclosure
+
+Dieses Projekt wird mit Unterstützung künstlicher Intelligenz entwickelt und dokumentiert. Der Hinweis beschreibt die Entwicklung und bedeutet nicht, dass das Programm selbst KI-Funktionen verwendet.
+
+This project is developed and documented with assistance from artificial intelligence. This disclosure describes the development process; it does not imply that the software itself uses AI features.
