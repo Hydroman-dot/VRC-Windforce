@@ -6,8 +6,6 @@ Die PC-Funktionen werden in [VRC HydroLink](https://github.com/Hydroman-dot/VRC-
 
 PC development continues in VRC HydroLink. This standalone project is retained as a historical reference and is scheduled for archival. Existing downloads and instructions describe the legacy version; full feature parity and hardware validation are not claimed.
 
-<p align="center"><img src="pc/assets/VRC_WinForce_Icon.png" width="220" alt="VRC WinForce icon"></p>
-
 VRC WinForce is a modular VR wind controller for Windows and ESP32. It turns live VR and fitness signals into real airflow using up to three independently wired 4-pin PWM PC fans.
 
 **Current PC version:** 1.8.2  
@@ -101,22 +99,15 @@ FAN2 <percent> <sequence>
 FAN3 <percent> <sequence>
 ```
 
-## Windows installation
+## Windows installation / Historischer PC-Stand
 
-Run:
+Für neue Installationen wird [VRC HydroLink](https://github.com/Hydroman-dot/VRC-HydroLink) verwendet.
 
-```text
-pc/VRC_WinForce_Installer.bat
-```
+In diesem Repository ist der alte PC-Code 1.8.2 als komprimierte Bootstrap-Dateien unter `bootstrap/appgz.00` bis `appgz.04` abgelegt. Der früher genannte Ordner `pc/` und sein Installer sind im aktuellen Repository nicht vorhanden. Die frühere Installationsanweisung ist daher nicht direkt ausführbar.
 
-The installer creates a local Python environment, installs required packages, extracts the included project icon and creates a desktop shortcut using it.
+Der Workflow [Bootstrap VRC WinForce PC files](.github/workflows/bootstrap.yml) beschreibt die Wiederherstellung des historischen Codes und die Erzeugung des Installers. Er verändert das Repository und ist kein fertiger Download. Die Bootstrap-Dateien bleiben zur Nachvollziehbarkeit erhalten.
 
-Manual installation:
-
-```bash
-pip install -r requirements.txt
-python pc/VRC_WinForce.py
-```
+For new installations, use HydroLink. The legacy PC source is retained as compressed bootstrap payloads; the previously documented installer is not present in this checkout.
 
 ## ESP32
 
@@ -159,7 +150,7 @@ Firmware updates also force PWM to 0%.
 ## Historical roadmap (continued in HydroLink)
 
 - Directional wind using the three independent fan channels
-- Unity / Modular Avatar PhysBone sensor package
+- Weitere Entwicklung des Unity-/Modular-Avatar-Sensors (historisches Paket bereits unter [unity/](unity/) vorhanden)
 - PC-driven ESP32 firmware updater
 - Additional game integrations
 
